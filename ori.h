@@ -53,7 +53,7 @@ namespace ori {
 
                 #if defined(_WIN32) || defined(__WIN32__)
                     HANDLE get_file_handle_(const std::ostream& stream) {
-                        int handle;
+                        DWORD handle;
                         if (&stream == &std::cout) {
                             if (_isatty(fileno(stdout))) {
                                 handle = STD_OUTPUT_HANDLE;
@@ -74,13 +74,13 @@ namespace ori {
                             throw std::runtime_error("get_term_width error: output stream was not cout or cerr");
                         }
 
-                        return handle;
+                        return GetStdHandle(handle);
                     }
 
-                    unsigned get_term_width(const std::ostream& stream) {
+                    unsigned get_term_width_(const std::ostream& stream) {
                         CONSOLE_SCREEN_BUFFER_INFO csbi; // implementation comes from https://stackoverflow.com/a/12642749
 
-                        assert(GetConsoleScreenBufferInfo(get_file_handle_(stream), &csbi);
+                        assert(GetConsoleScreenBufferInfo(get_file_handle_(stream), &csbi));
                         return csbi.srWindow.Right - csbi.srWindow.Left + 1;
                     }
                 #endif

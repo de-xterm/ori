@@ -5,4 +5,6 @@ set(CMAKE_CXX_STANDARD 14)
 
 add_executable(ori main.cpp)
 
-target_link_libraries(ori tinfo)
+if(UNIX)
+    target_link_libraries(ori tinfo)
+endif()
