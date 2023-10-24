@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
         hyphenate_cutoffs = std::stoi(argv[3]);
     }
     unsigned indent = std::stoi(argv[1]);
-    ori::println(std::cerr, indent*2, right_padding, hyphenate_cutoffs, frost);
+    ori::println(std::cerr, frost, indent, right_padding, hyphenate_cutoffs);
 
     return 0;
 }
