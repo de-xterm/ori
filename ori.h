@@ -85,7 +85,13 @@ namespace ori {
                 }
             #endif
 
+            static unsigned current_indent_ = 0;
+
             void print_impl_(std::ostream& stream, const std::string& in_str, unsigned indent, unsigned right_padding, bool hyphenate_cutoffs) {
+                if(indent == -1) {
+                    indent = current_indent_;
+                }
+
                 std::string out_str(indent, ' ');
                 unsigned term_width = detail::get_term_width_(stream);
                 unsigned max_line_width = term_width - indent - right_padding;
@@ -191,9 +197,31 @@ namespace ori {
         }
     }
 
+    #ifdef ORI_IMPL
+        void set_indent(unsigned indent) {
+            detail::current_indent_ = indent;
+        }
+
+        unsigned get_indent() {
+            return detail::current_indent_;
+        }
+
+        void change_increment(int difference) {
+            detail::current_indent_ += difference;
+        }
+    #endif
+
+    constexpr unsigned use_global_indent = -1; // this is well-defined
+
+    void set_indent(unsigned indent);
+    unsigned get_indent();
+
+    /// adds difference to current increment
+    void change_increment(int difference);
+
 
     template<typename T>
-    std::ostream& print(std::ostream& stream, const T& val, unsigned indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
+    std::ostream& print(std::ostream& stream, const T& val, unsigned indent = use_global_indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
         decltype(auto) in_str = detail::to_string_(val);
         detail::print_impl_(stream, in_str, indent, right_padding, hyphenate_cutoffs);
         return stream;
@@ -201,19 +229,19 @@ namespace ori {
 
     /// default stream is std::cout
     template<typename T>
-    std::ostream& print(const T& val, unsigned indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
+    std::ostream& print(const T& val, unsigned indent = use_global_indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
         decltype(auto) in_str = detail::to_string_(val);
         return print(std::cout, in_str, indent, right_padding, hyphenate_cutoffs);
     }
 
     template<typename T>
-    std::ostream& println(std::ostream& stream, const T& val, unsigned indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
+    std::ostream& println(std::ostream& stream, const T& val, unsigned indent = use_global_indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
         return print(stream, val, indent, right_padding, hyphenate_cutoffs) << '\n';
     }
 
     /// default stream is std::cout
     template<typename T>
-    std::ostream& println(const T& val, unsigned indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
+    std::ostream& println(const T& val, unsigned indent = use_global_indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
         return print(val, indent, right_padding, hyphenate_cutoffs) << '\n';
     }
 }
