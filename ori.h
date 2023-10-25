@@ -183,7 +183,7 @@ namespace ori {
             }
 
         #else // end of #ifdef ORI_IMPL block
-            void print_impl_(std::ostream& stream, unsigned indent, unsigned right_padding, bool hyphenate_cutoffs, const std::string& in_str);
+            void print_impl_(std::ostream& stream, const std::string& in_str, unsigned indent, unsigned right_padding, bool hyphenate_cutoffs);
             const std::string& to_string_(const std::string& str);
             std::string to_string(const char* cstr);
             std::string to_string(char c);
