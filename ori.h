@@ -171,10 +171,16 @@ namespace ori {
             std::string to_string(const char* cstr) {
                 return {cstr};
             }
+
+            std::string to_string(char c) {
+                   return {1, c};
+            }
+
         #else // end of #ifdef ORI_IMPL block
             void print_impl_(std::ostream& stream, unsigned indent, unsigned right_padding, bool hyphenate_cutoffs, const std::string& in_str);
             const std::string& to_string_(const std::string& str);
             std::string to_string(const char* cstr);
+            std::string to_string(char c);
         #endif
 
         template<typename T>
@@ -187,14 +193,27 @@ namespace ori {
 
 
     template<typename T>
-    std::ostream& print(std::ostream& stream, const T& val, unsigned indent, unsigned right_padding, bool hyphenate_cutoffs) {
+    std::ostream& print(std::ostream& stream, const T& val, unsigned indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
         decltype(auto) in_str = detail::to_string_(val);
         detail::print_impl_(stream, in_str, indent, right_padding, hyphenate_cutoffs);
         return stream;
     }
 
+    /// default stream is std::cout
     template<typename T>
-    std::ostream& println(std::ostream& stream, const T& val, unsigned indent, unsigned right_padding, bool hyphenate_cutoffs) {
+    std::ostream& print(const T& val, unsigned indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
+        decltype(auto) in_str = detail::to_string_(val);
+        return print(std::cout, in_str, indent, right_padding, hyphenate_cutoffs);
+    }
+
+    template<typename T>
+    std::ostream& println(std::ostream& stream, const T& val, unsigned indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
         return print(stream, val, indent, right_padding, hyphenate_cutoffs) << '\n';
+    }
+
+    /// default stream is std::cout
+    template<typename T>
+    std::ostream& println(const T& val, unsigned indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
+        return print(val, indent, right_padding, hyphenate_cutoffs) << '\n';
     }
 }

@@ -7,7 +7,7 @@ const char* lorem =
 ;
 
 const char* frost =
-        #include "sample_text/lorem.txt"
+        #include "sample_text/frost.txt"
 ;
 
 const char* iroha =
@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
         hyphenate_cutoffs = std::stoi(argv[3]);
     }
     unsigned indent = std::stoi(argv[1]);
-    ori::println(std::cerr, frost, indent, right_padding, hyphenate_cutoffs);
+    ori::println(frost, indent, right_padding, hyphenate_cutoffs);
 
     return 0;
 }
