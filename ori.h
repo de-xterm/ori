@@ -4,7 +4,7 @@
 #include <sstream>
 #include <cassert>
 
-#ifdef __unix__
+#if defined(__unix__) || defined(__unix) || defined(__APPLE__) || defined(__MACH__)
     #include <unistd.h>
     #include <sys/ioctl.h>
 #elif defined(_WIN32) || defined(__WIN32__)
