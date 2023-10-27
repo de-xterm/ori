@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <cassert>
+#include <unordered_map>
 
 #if defined(__unix__) || defined(__unix) || defined(__APPLE__) || defined(__MACH__)
     #include <unistd.h>
@@ -87,12 +88,33 @@ namespace ori {
 
             static unsigned current_indent_ = 0;
 
+
+            static std::unordered_map<const std::ostream*, bool> stream_last_char_was_newline_;
+
+            bool last_char_was_newline_(const std::ostream& stream) {
+
+                if(!stream_last_char_was_newline_.count(&stream)) {
+                    stream_last_char_was_newline_.emplace(&stream, true);
+                }
+
+                return stream_last_char_was_newline_.at(&stream);
+            }
+
+            void set_last_char_was_newline_(const std::ostream& stream, bool value) {
+                stream_last_char_was_newline_[&stream] = value;
+            }
+
+
             void print_impl_(std::ostream& stream, const std::string& in_str, unsigned indent, unsigned right_padding, bool hyphenate_cutoffs) {
                 if(indent == -1) {
                     indent = current_indent_;
                 }
 
-                std::string out_str(indent, ' ');
+
+                std::string out_str(last_char_was_newline_(stream) * indent, ' ');
+
+                set_last_char_was_newline_(stream, (in_str.back() == '\n'));
+
                 unsigned term_width = detail::get_term_width_(stream);
                 unsigned max_line_width = term_width - indent - right_padding;
 
@@ -102,7 +124,7 @@ namespace ori {
                     if (in_str[source_i] == '\n') {
                         out_str += in_str.substr(current_line_start_i, source_i - current_line_start_i);
 
-                        if (source_i && (in_str[source_i - 1] != '\n')) {
+                        if (source_i && (in_str[source_i - 1] != '\n') && (source_i != in_str.size()-1)) {
                             out_str += '\n';
                         }
 
@@ -206,8 +228,18 @@ namespace ori {
             return detail::current_indent_;
         }
 
-        void change_increment(int difference) {
+        void change_indent(int difference) {
             detail::current_indent_ += difference;
+        }
+
+
+        void println(std::ostream& stream) {
+            stream << '\n';
+            detail::set_last_char_was_newline_(stream, true);
+        }
+
+        void println() {
+            println(std::cout);
         }
     #endif
 
@@ -216,32 +248,40 @@ namespace ori {
     void set_indent(unsigned indent);
     unsigned get_indent();
 
-    /// adds difference to current increment
-    void change_increment(int difference);
+    /// adds difference to current indent
+    void change_indent(int difference);
 
 
     template<typename T>
-    std::ostream& print(std::ostream& stream, const T& val, unsigned indent = use_global_indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
+    void print(std::ostream& stream, const T& val, unsigned indent = use_global_indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
         decltype(auto) in_str = detail::to_string_(val);
         detail::print_impl_(stream, in_str, indent, right_padding, hyphenate_cutoffs);
-        return stream;
     }
 
     /// default stream is std::cout
     template<typename T>
-    std::ostream& print(const T& val, unsigned indent = use_global_indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
-        decltype(auto) in_str = detail::to_string_(val);
-        return print(std::cout, in_str, indent, right_padding, hyphenate_cutoffs);
+    void print(const T& val, unsigned indent = use_global_indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
+        print(std::cout, val, indent, right_padding, hyphenate_cutoffs);
     }
 
     template<typename T>
-    std::ostream& println(std::ostream& stream, const T& val, unsigned indent = use_global_indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
-        return print(stream, val, indent, right_padding, hyphenate_cutoffs) << '\n';
+    void println(std::ostream& stream, const T& val, unsigned indent = use_global_indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
+        print(stream, val, indent, right_padding, hyphenate_cutoffs);
+        stream << '\n';
+        detail::set_last_char_was_newline_(stream, true);
     }
 
     /// default stream is std::cout
     template<typename T>
-    std::ostream& println(const T& val, unsigned indent = use_global_indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
-        return print(val, indent, right_padding, hyphenate_cutoffs) << '\n';
+    void println(const T& val, unsigned indent = use_global_indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
+        print(val, indent, right_padding, hyphenate_cutoffs);
+        std::cout << '\n';
+        detail::set_last_char_was_newline_(std::cout, true);
     }
+
+    /// print a newline to the given stream
+    void println(std::ostream& stream);
+
+    /// print a newline to std::cout
+    void println();
 }

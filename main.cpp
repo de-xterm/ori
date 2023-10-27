@@ -36,6 +36,10 @@ int main(int argc, char** argv) {
     ori::set_indent(indent);
 
     ori::println(frost);
+    ori::println();
+    ori::print("foo ");
+    ori::println("bar");
+    ori::print("baz (on newline)\n");
 
     return 0;
 }
