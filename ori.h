@@ -118,9 +118,10 @@ namespace ori {
 
                 unsigned index_in_current_line = last_char_index_in_line_(stream);
                 unsigned current_line_start_i = 0;
+                bool is_first_line = true;
                 for(unsigned source_i = 0; source_i < in_str.size(); ++source_i) {
                     if(in_str[source_i] == '\n') {
-                        out_str += in_str.substr(current_line_start_i, source_i - current_line_start_i);
+                        out_str += in_str.substr(current_line_start_i, source_i - current_line_start_i - is_first_line*last_char_index_in_line_(stream));
 
                         if(source_i && (in_str[source_i - 1] != '\n') && (source_i != in_str.size()-1)) {
                             out_str += '\n';
@@ -136,12 +137,14 @@ namespace ori {
 
                         index_in_current_line = 0;
                         current_line_start_i = source_i;
+
+                        is_first_line = false;
                     }
                     else if(index_in_current_line == max_line_width) {
                         for(unsigned j = source_i; j > current_line_start_i; --j) {
 
                             if(std::isspace(in_str[j])) {
-                                out_str += in_str.substr(current_line_start_i, j - current_line_start_i);
+                                out_str += in_str.substr(current_line_start_i, j - current_line_start_i - is_first_line*last_char_index_in_line_(stream));
                                 out_str += '\n';
                                 for(unsigned space_i = 0; space_i < indent; ++space_i) {
                                     out_str += ' ';
@@ -153,13 +156,15 @@ namespace ori {
 
                                         index_in_current_line = 0;
                                         current_line_start_i = source_i;
+                                        is_first_line = false;
+
                                         goto end_of_first_loop;
                                     }
                                 }
                             }
                         }
                         // if we reach this code, that means that there were no spaces in the line, so we have no choice but to cut it off
-                        out_str += in_str.substr(current_line_start_i, max_line_width - 1 - detail::last_char_index_in_line_(stream));
+                        out_str += in_str.substr(current_line_start_i, max_line_width - 1 - is_first_line*detail::last_char_index_in_line_(stream));
                         if(hyphenate_cutoffs) {
                             out_str += '-';
 
@@ -177,6 +182,8 @@ namespace ori {
 
                         index_in_current_line = 0;
                         current_line_start_i = source_i;
+
+                        is_first_line = false;
                         goto end_of_first_loop;
                     }
 

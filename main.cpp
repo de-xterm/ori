@@ -35,10 +35,10 @@ int main(int argc, char** argv) {
     unsigned indent = std::stoi(argv[1]);
     ori::set_indent(indent);
 
-    //ori::println(frost);
-    //ori::println();
+    ori::println(frost);
+    ori::println();
     ori::print("foo ");
-    ori::println("barbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbar");
+    ori::println("barbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbar", ori::use_global_indent, 0, hyphenate_cutoffs);
     ori::print("baz (on newline)\n");
 
     return 0;
