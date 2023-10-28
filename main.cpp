@@ -33,8 +33,10 @@ int main(int argc, char** argv) {
         hyphenate_cutoffs = std::stoi(argv[3]);
     }
     unsigned indent = std::stoi(argv[1]);
-    ori::set_indent(indent);
+    ori::change_indent(4);
 
+    ori::println(lorem);
+    ori::println();
     ori::println(frost);
     ori::println();
     ori::print("foo ");

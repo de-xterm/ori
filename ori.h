@@ -191,7 +191,7 @@ namespace ori {
                     ++index_in_current_line;
                 }
                 if(in_str.size() - current_line_start_i) {
-                    out_str += in_str.substr(current_line_start_i, in_str.size() - current_line_start_i);
+                    out_str += in_str.substr(current_line_start_i, in_str.size() - current_line_start_i );
                     set_last_char_index_in_line_(stream, in_str.size() - current_line_start_i);
                 }
                 else {
