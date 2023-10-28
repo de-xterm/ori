@@ -21,16 +21,16 @@ namespace ori {
             #ifdef __unix__
                 int get_file_descriptor_(const std::ostream& stream) {
                     int fd;
-                    if (&stream == &std::cout) {
-                        if (isatty(fileno(stdout))) {
+                    if(&stream == &std::cout) {
+                        if(isatty(fileno(stdout))) {
                             fd = fileno(stdout);
                         }
                         else {
                             throw std::runtime_error("get_term_width error: output stream did not refer to a tty");
                         }
                     }
-                    else if (&stream == &std::cerr) {
-                        if (isatty(fileno(stderr))) {
+                    else if(&stream == &std::cerr) {
+                        if(isatty(fileno(stderr))) {
                             fd = fileno(stderr);
                         }
                         else {
@@ -48,6 +48,7 @@ namespace ori {
                     struct winsize w;
                     assert(ioctl(get_file_descriptor_(stream), TIOCGWINSZ, &w) >= 0);
 
+                    return 36;
                     return w.ws_col;
                 }
             #endif
@@ -55,16 +56,16 @@ namespace ori {
             #if defined(_WIN32) || defined(__WIN32__)
                 HANDLE get_file_handle_(const std::ostream& stream) {
                     DWORD handle;
-                    if (&stream == &std::cout) {
-                        if (_isatty(fileno(stdout))) {
+                    if(&stream == &std::cout) {
+                        if(_isatty(fileno(stdout))) {
                             handle = STD_OUTPUT_HANDLE;
                         }
                         else {
                             throw std::runtime_error("get_term_width error: output stream did not refer to a tty");
                         }
                     }
-                    else if (&stream == &std::cerr) {
-                        if (_isatty(fileno(stderr))) {
+                    else if(&stream == &std::cerr) {
+                        if(_isatty(fileno(stderr))) {
                             handle = STD_ERROR_HANDLE;
                         }
                         else {
@@ -89,19 +90,19 @@ namespace ori {
             static unsigned current_indent_ = 0;
 
 
-            static std::unordered_map<const std::ostream*, bool> stream_last_char_was_newline_;
+            static std::unordered_map<const std::ostream*, unsigned> stream_index_in_current_line_; // TODO: instead of a bool, have an unsigned that keeps track of the current line
+                                                                                                // length, so that subsequent print statements don't wrap too late
+            unsigned last_char_index_in_line_(const std::ostream& stream) {
 
-            bool last_char_was_newline_(const std::ostream& stream) {
-
-                if(!stream_last_char_was_newline_.count(&stream)) {
-                    stream_last_char_was_newline_.emplace(&stream, true);
+                if(!stream_index_in_current_line_.count(&stream)) {
+                    stream_index_in_current_line_.emplace(&stream, 0);
                 }
 
-                return stream_last_char_was_newline_.at(&stream);
+                return stream_index_in_current_line_.at(&stream);
             }
 
-            void set_last_char_was_newline_(const std::ostream& stream, bool value) {
-                stream_last_char_was_newline_[&stream] = value;
+            void set_last_char_index_in_line_(const std::ostream& stream, unsigned value) {
+                stream_index_in_current_line_[&stream] = value;
             }
 
 
@@ -109,48 +110,46 @@ namespace ori {
                 if(indent == -1) {
                     indent = current_indent_;
                 }
+                // TODO: should probably trim whitespace from the end of in_str
 
-
-                std::string out_str(last_char_was_newline_(stream) * indent, ' ');
-
-                set_last_char_was_newline_(stream, (in_str.back() == '\n'));
+                std::string out_str(!bool(last_char_index_in_line_(stream)) * indent, ' ');
 
                 unsigned term_width = detail::get_term_width_(stream);
                 unsigned max_line_width = term_width - indent - right_padding;
 
-                unsigned index_in_current_line = 0;
+                unsigned index_in_current_line = last_char_index_in_line_(stream);
                 unsigned current_line_start_i = 0;
-                for (unsigned source_i = 0; source_i < in_str.size(); ++source_i) {
-                    if (in_str[source_i] == '\n') {
+                for(unsigned source_i = 0; source_i < in_str.size(); ++source_i) {
+                    if(in_str[source_i] == '\n') {
                         out_str += in_str.substr(current_line_start_i, source_i - current_line_start_i);
 
-                        if (source_i && (in_str[source_i - 1] != '\n') && (source_i != in_str.size()-1)) {
+                        if(source_i && (in_str[source_i - 1] != '\n') && (source_i != in_str.size()-1)) {
                             out_str += '\n';
                         }
 
-                        for (unsigned space_i = 0; space_i < indent; ++space_i) {
+                        for(unsigned space_i = 0; space_i < indent; ++space_i) {
                             out_str += ' ';
                         }
 
-                        if ((source_i + 1 < in_str.size()) && (in_str[source_i + 1] != '\n')) {
+                        if((source_i + 1 < in_str.size()) && (in_str[source_i + 1] != '\n')) {
                             ++source_i;
                         }
 
                         index_in_current_line = 0;
                         current_line_start_i = source_i;
                     }
-                    else if (index_in_current_line == max_line_width) {
-                        for (unsigned j = source_i; j > current_line_start_i; --j) {
+                    else if(index_in_current_line == max_line_width) {
+                        for(unsigned j = source_i; j > current_line_start_i; --j) {
 
-                            if (std::isspace(in_str[j])) {
+                            if(std::isspace(in_str[j])) {
                                 out_str += in_str.substr(current_line_start_i, j - current_line_start_i);
                                 out_str += '\n';
-                                for (unsigned space_i = 0; space_i < indent; ++space_i) {
+                                for(unsigned space_i = 0; space_i < indent; ++space_i) {
                                     out_str += ' ';
                                 }
 
-                                for (unsigned k = j; k < in_str.size(); ++k) {
-                                    if (!std::isspace(in_str[k])) {
+                                for(unsigned k = j; k < in_str.size(); ++k) {
+                                    if(!std::isspace(in_str[k])) {
                                         source_i = k;
 
                                         index_in_current_line = 0;
@@ -160,19 +159,19 @@ namespace ori {
                                 }
                             }
                         }
-                        // if we reach this code, that means that the whole line had no spaces, so we have no choice but to cut it off
-                        out_str += in_str.substr(current_line_start_i, max_line_width - 1);
-                        if (hyphenate_cutoffs) {
+                        // if we reach this code, that means that there were no spaces in the line, so we have no choice but to cut it off
+                        out_str += in_str.substr(current_line_start_i, max_line_width - 1 - detail::last_char_index_in_line_(stream));
+                        if(hyphenate_cutoffs) {
                             out_str += '-';
 
                         }
-                        if (source_i) {
+                        if(source_i) {
                             --source_i;
                         }
 
-                        if (source_i < in_str.size() - 1) {
+                        if(source_i < in_str.size() - 1) {
                             out_str += '\n';
-                            for (unsigned space_i = 0; space_i < indent; ++space_i) {
+                            for(unsigned space_i = 0; space_i < indent; ++space_i) {
                                 out_str += ' ';
                             }
                         }
@@ -185,8 +184,12 @@ namespace ori {
                     end_of_first_loop:;
                     ++index_in_current_line;
                 }
-                if (in_str.size() - current_line_start_i) {
+                if(in_str.size() - current_line_start_i) {
                     out_str += in_str.substr(current_line_start_i, in_str.size() - current_line_start_i);
+                    set_last_char_index_in_line_(stream, in_str.size() - current_line_start_i);
+                }
+                else {
+                    set_last_char_index_in_line_(stream, 0);
                 }
 
                 std::cout << out_str;
@@ -196,19 +199,19 @@ namespace ori {
                 return str;
             }
 
-            std::string to_string(const char* cstr) {
+            std::string to_string_(const char* cstr) {
                 return {cstr};
             }
 
-            std::string to_string(char c) {
+            std::string to_string_(char c) {
                    return {1, c};
             }
 
         #else // end of #ifdef ORI_IMPL block
             void print_impl_(std::ostream& stream, const std::string& in_str, unsigned indent, unsigned right_padding, bool hyphenate_cutoffs);
             const std::string& to_string_(const std::string& str);
-            std::string to_string(const char* cstr);
-            std::string to_string(char c);
+            std::string to_string_(const char* cstr);
+            std::string to_string_(char c);
         #endif
 
         template<typename T>
@@ -235,7 +238,7 @@ namespace ori {
 
         void println(std::ostream& stream) {
             stream << '\n';
-            detail::set_last_char_was_newline_(stream, true);
+            detail::set_last_char_index_in_line_(stream, 0);
         }
 
         void println() {
@@ -268,7 +271,7 @@ namespace ori {
     void println(std::ostream& stream, const T& val, unsigned indent = use_global_indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
         print(stream, val, indent, right_padding, hyphenate_cutoffs);
         stream << '\n';
-        detail::set_last_char_was_newline_(stream, true);
+        detail::set_last_char_index_in_line_(stream, 0);
     }
 
     /// default stream is std::cout
@@ -276,7 +279,7 @@ namespace ori {
     void println(const T& val, unsigned indent = use_global_indent, unsigned right_padding = 0, bool hyphenate_cutoffs = false) {
         print(val, indent, right_padding, hyphenate_cutoffs);
         std::cout << '\n';
-        detail::set_last_char_was_newline_(std::cout, true);
+        detail::set_last_char_index_in_line_(std::cout, 0);
     }
 
     /// print a newline to the given stream
