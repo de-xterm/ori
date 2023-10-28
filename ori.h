@@ -48,7 +48,6 @@ namespace ori {
                     struct winsize w;
                     assert(ioctl(get_file_descriptor_(stream), TIOCGWINSZ, &w) >= 0);
 
-                    return 36;
                     return w.ws_col;
                 }
             #endif
