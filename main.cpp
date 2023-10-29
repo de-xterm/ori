@@ -40,8 +40,12 @@ int main(int argc, char** argv) {
     ori::println(frost);
     ori::println();
     ori::print("foo ");
-    ori::println("barbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbar", ori::use_global_indent, 0, hyphenate_cutoffs);
+    ori::print("barbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbar\n", ori::use_global_indent, 0, hyphenate_cutoffs);
     ori::print("baz (on newline)\n");
+/*
+    ori::print("foo ");
+    ori::print("barbar\n", ori::use_global_indent, 0, hyphenate_cutoffs);
+    ori::print("baz (on new line)\n");*/
 
     return 0;
 }

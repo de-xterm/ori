@@ -48,6 +48,8 @@ namespace ori {
                     struct winsize w;
                     assert(ioctl(get_file_descriptor_(stream), TIOCGWINSZ, &w) >= 0);
 
+                    //return 205;
+
                     return w.ws_col;
                 }
             #endif
@@ -121,7 +123,7 @@ namespace ori {
                 bool is_first_line = true;
                 for(unsigned source_i = 0; source_i < in_str.size(); ++source_i) {
                     if(in_str[source_i] == '\n') {
-                        out_str += in_str.substr(current_line_start_i, source_i - current_line_start_i - is_first_line*last_char_index_in_line_(stream));
+                        out_str += in_str.substr(current_line_start_i, source_i - current_line_start_i /*- is_first_line*last_char_index_in_line_(stream)*/);
 
                         if(source_i && (in_str[source_i - 1] != '\n') && (source_i != in_str.size()-1)) {
                             out_str += '\n';
@@ -191,14 +193,14 @@ namespace ori {
                     ++index_in_current_line;
                 }
                 if(in_str.size() - current_line_start_i) {
-                    out_str += in_str.substr(current_line_start_i, in_str.size() - current_line_start_i );
-                    set_last_char_index_in_line_(stream, in_str.size() - current_line_start_i);
+                    out_str += in_str.substr(current_line_start_i, std::string::npos);
+                    set_last_char_index_in_line_(stream, (out_str.back() != '\n')*(in_str.size() - current_line_start_i));
                 }
                 else {
                     set_last_char_index_in_line_(stream, 0);
                 }
 
-                std::cout << out_str;
+                stream << out_str;
             }
 
             const std::string& to_string_(const std::string& str) {
