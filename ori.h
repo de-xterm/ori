@@ -125,7 +125,7 @@ namespace ori {
                     if(in_str[source_i] == '\n') {
                         out_str += in_str.substr(current_line_start_i, source_i - current_line_start_i /*- is_first_line*last_char_index_in_line_(stream)*/);
 
-                        if(source_i && (in_str[source_i - 1] != '\n') && (source_i != in_str.size()-1)) {
+                        if((source_i != in_str.size()-1) && (in_str[source_i+1] != '\n')) {
                             out_str += '\n';
                         }
 

@@ -42,10 +42,9 @@ int main(int argc, char** argv) {
     ori::print("foo ");
     ori::print("barbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbarbar\n", ori::use_global_indent, 0, hyphenate_cutoffs);
     ori::print("baz (on newline)\n");
-/*
-    ori::print("foo ");
-    ori::print("barbar\n", ori::use_global_indent, 0, hyphenate_cutoffs);
-    ori::print("baz (on new line)\n");*/
+
+    ori::print("foo\n\n");
+    ori::print("bar\n");
 
     return 0;
 }
