@@ -6,9 +6,11 @@
 #include <unordered_map>
 
 #if defined(__unix__) || defined(__unix) || defined(__APPLE__) || defined(__MACH__)
+    #define ORI_UNIX
     #include <unistd.h>
     #include <sys/ioctl.h>
 #elif defined(_WIN32) || defined(__WIN32__)
+    #define ORI_WINDOWS
     #include <windows.h>
     #include <io.h>
 #else
@@ -18,7 +20,7 @@
 namespace ori {
     namespace detail {
         #ifdef ORI_IMPL
-            #ifdef __unix__
+            #ifdef ORI_UNIX
                 int get_file_descriptor_(const std::ostream& stream) {
                     int fd;
                     if(&stream == &std::cout) {
@@ -54,7 +56,7 @@ namespace ori {
                 }
             #endif
 
-            #if defined(_WIN32) || defined(__WIN32__)
+            #if ORI_WINDOWS
                 HANDLE get_file_handle_(const std::ostream& stream) {
                     DWORD handle;
                     if(&stream == &std::cout) {
@@ -296,3 +298,6 @@ namespace ori {
     /// print a newline to std::cout
     void println();
 }
+
+#undef ORI_UNIX
+#undef ORI_WINDOWS
