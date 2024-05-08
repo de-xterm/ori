@@ -48,15 +48,19 @@ namespace ori {
 
                 unsigned get_term_width_(const std::ostream& stream) {
                     struct winsize w;
-                    assert(ioctl(get_file_descriptor_(stream), TIOCGWINSZ, &w) >= 0);
-
+                    try {
+                        assert(ioctl(get_file_descriptor_(stream), TIOCGWINSZ, &w) >= 0);
+                    }
+                    catch(std::runtime_error&) {
+                        return -1; // the stream wasn't cout, cerr, or a tty. This means we can't do any fancy wrapping, so just return -1 (uint_max), effectively disabling wrapping
+                    }
                     //return 205;
 
                     return w.ws_col;
                 }
             #endif
 
-            #if ORI_WINDOWS
+            #ifdef ORI_WINDOWS
                 HANDLE get_file_handle_(const std::ostream& stream) {
                     DWORD handle;
                     if(&stream == &std::cout) {
@@ -85,7 +89,14 @@ namespace ori {
                 unsigned get_term_width_(const std::ostream& stream) {
                     CONSOLE_SCREEN_BUFFER_INFO csbi; // implementation comes from https://stackoverflow.com/a/12642749
 
-                    assert(GetConsoleScreenBufferInfo(get_file_handle_(stream), &csbi));
+                    try {
+                        assert(GetConsoleScreenBufferInfo(get_file_handle_(stream), &csbi));
+                    }
+                    catch(std::runtime_error&) {
+                        return -1; // the stream wasn't cout, cerr, or a tty. This means we can't do any fancy wrapping, so just return -1 (uint_max), effectively disabling wrapping
+                    }
+
+
                     return csbi.srWindow.Right - csbi.srWindow.Left + 1;
                 }
             #endif
